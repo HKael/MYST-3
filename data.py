@@ -17,5 +17,6 @@ data_historical = fn.f_leer_archivo("files/historical_data.csv")
 
 
 # Data describing the instruments and their pips
-data_pips = fn.f_leer_archivo("files/instruments_pips.csv")
+data_pips = fn.f_leer_archivo("files/instruments_pips.csv").set_index("Symbol")
+
 
