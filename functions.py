@@ -42,7 +42,6 @@ def f_leer_archivo(file_path):
     return pd.read_csv(file_path)
 
 
-# %%
 # Function to get pip multiplier
 def f_pip_size(param_ins, data_param2):
     """
@@ -75,7 +74,6 @@ def f_pip_size(param_ins, data_param2):
     return pipsize
 
 
-# %%
 # Function to add and format time columns
 def f_columnas_tiempos(param_data):
     """
@@ -106,12 +104,11 @@ def f_columnas_tiempos(param_data):
     hd["Time.1"] = pd.to_datetime(hd["Time.1"])
     hd["Time3"] = hd["Time.1"] - hd["Time"]
     hd["Time3"] = hd["Time3"].dt.total_seconds()
-    hd = hd.rename(columns = {"Time" : "Open Time","Time.1" : "Close Time", "Time3" : "Tiempo",
-                              "Price" : "Open Price", "Price.1" : "Close Price" })
+    hd = hd.rename(columns={"Time": "Open Time", "Time.1": "Close Time", "Time3": "Tiempo",
+                            "Price": "Open Price", "Price.1": "Close Price"})
     return hd
 
 
-# %%
 # Function to add pip columns
 def f_columnas_pips(param_data, comparison_file):
     """
@@ -248,7 +245,130 @@ def f_estadisticas_ba(param_data):
     dictionary = {'df_1_tabla': df1, 'df_2_ranking': df2}
     return dictionary
 
+
 # %% Performance Attribution Measures
 
+def f_evolucion_capital(param_data):
+    """
+    Name:
+    -------
+        f_evolucion_capital
 
+
+    Description:
+    -------
+        Calculates the profit and accumulated profit by date.
+
+
+
+    Parameters:
+    -------
+        param_data: Data Frame
+
+
+    Returns:
+    -------
+        Gets a DataFrame with three columns, date, profit, accumulated profit.
+
+     """
+    historical_profit = param_data[["Close Time", "Profit"]]
+    historical_profit["Close Time"] = pd.to_datetime(historical_profit["Close Time"]).dt.date
+    historical_profit = historical_profit.groupby("Close Time").sum()
+    historical_profit = historical_profit.asfreq('D')
+    historical_profit["Profit"] = historical_profit["Profit"].fillna(0)
+    historical_profit["Accumulated Profit"] = historical_profit["Profit"].cumsum() + 100000
+    return historical_profit
+
+
+# %%
+def f_estadisticas_mad(param_data):
+    """
+        Name:
+        -------
+            f_estadisticas_mad
+
+
+        Description:
+        -------
+            A function that returns Performance Attribution Metrics.
+
+
+
+        Parameters:
+        -------
+            param_data: Data Frame
+
+
+        Returns:
+        -------
+            Returns a DataFrame with four columns. Performance Attribution Metrics, which are Sharpe Ratio,
+            Adjusted Sharpe Ratio, DrawDown and DrawUp's Capital, initial and last date.
+
+    """
+
+    # Sharpe Ratio Original
+    log_yield = np.log(param_data['Accumulated Profit'] / param_data['Accumulated Profit'].shift()).dropna()
+    rp = log_yield.mean() * 360
+    risk_free = .05
+    sdp = log_yield.std()
+    sharp_r_o = (rp - risk_free) / sdp
+
+    # Sharpe Ratio Ajustado
+
+    # DrawDown
+    k6 = param_data.reset_index()
+    w = k6[k6["Accumulated Profit"] == k6["Accumulated Profit"].max()].index
+    f = w[0]
+    if f < (len(k6["Accumulated Profit"]) - 1):
+        maximum = k6["Accumulated Profit"].max()
+        minimum = k6["Accumulated Profit"][f:].min()
+        d_down = minimum - maximum
+    else:
+        new_param = k6.shift().reset_index()
+        maximum = k6["Accumulated Profit"].max()
+        w2 = new_param[new_param["Accumulated Profit"] == new_param["Accumulated Profit"].max()].index
+        f2 = w2[0]
+        minimum = new_param["Accumulated Profit"][f2:].min()
+        d_down = minimum - maximum
+
+    index_d_down = param_data.index
+    condition_d_down_initial = param_data["Accumulated Profit"] == maximum
+    condition_d_down_last = param_data["Accumulated Profit"] == minimum
+    d_down_initial = index_d_down[condition_d_down_initial].tolist()
+    d_down_last = index_d_down[condition_d_down_last].tolist()
+
+    # DrawUp
+    w = k6[k6["Accumulated Profit"] == k6["Accumulated Profit"].min()].index
+    f = w[0]
+
+    if f < (len(k6["Accumulated Profit"]) - 1):
+        maximum = k6["Accumulated Profit"].max()
+        minimum = k6["Accumulated Profit"][f:].min()
+        d_up = maximum - minimum
+    else:
+        new_param = k6.shift().reset_index()
+        maximum = k6["Accumulated Profit"].max()
+        w2 = new_param[new_param["Accumulated Profit"] == new_param["Accumulated Profit"].min()].index
+        f2 = w2[0]
+        minimum = new_param["Accumulated Profit"][f2:].min()
+        d_up = maximum - minimum
+
+    index_d_up = param_data.index
+    condition_d_up_initial = param_data["Accumulated Profit"] == minimum
+    condition_d_up_last = param_data["Accumulated Profit"] == maximum
+    d_up_initial = index_d_up[condition_d_up_initial].tolist()
+    d_up_last = index_d_up[condition_d_up_last].tolist()
+
+    # DataFrame
+    mad_stats = pd.DataFrame(columns=["Metric", "Measurment", "Value", "Description"])
+    mad_stats["Metric"] = ["Sharpe Original", "Sharpe Actualizado", "DrawDown Capital", "DrawDown Capital",
+                           "DrawDown Capital", "DrawUp Capital", "DrawUp Capital", "DrawUp Capital"]
+    mad_stats["Measurment"] = ["Amount", "Amount", "Initial Date", "Last Date", "DrawDown Capital $",
+                               "Initial Date", "Last Date", "DrawUp Capital $"]
+    mad_stats["Value"] = [sharp_r_o, 5, d_down_initial, d_down_last, d_down, d_up_initial, d_up_last, d_up]
+    mad_stats["Description"] = ["Sharpe Ratio Original Formula", "Sharpe Ratio Adjusted Formula",
+                                "Initial Date of Capital's DrawDown", "Last Date of Capital's DrawDown",
+                                "Maximum floating loss recorded", "Initial Date of Capital's DrawUp",
+                                "Last Date of Capital's DrawUp", "Maximum floating profit recorded"]
+    return mad_stats
 # %% Behavioral Finance
