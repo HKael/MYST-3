@@ -8,9 +8,17 @@
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 import plotly.graph_objects as go
+import plotly.express as px
+import numpy as np
 
 
 # %% Graph 1
+def g_1(param_data):
+    df = param_data
+    fig = go.Figure(data=[go.Pie(labels=df["Symbol"], values=df["Rank"], pull=[0.3])])
+    fig.update_layout(title_text='Descriptive Statistics Tabla 2')
+    return fig.show()
+
 
 # %% Graph 2
 def g_2(param_data):
@@ -40,4 +48,37 @@ def g_2(param_data):
                       xaxis_title='Day',
                       yaxis_title='US Dollars')
 
+    return fig.show()
+
+
+# %% Extra Graph 1
+def g_extra_1(param_data):
+    df = param_data
+    df.loc[7, "Value"] = 8.515
+    df.loc[8, "Value"] = 8.36
+    fig = px.bar(df, y='Value', x='Measurment', color="Value")
+    fig.update_layout(uniformtext_minsize=8, uniformtext_mode='hide')
+
+    # Change the bar mode
+    fig.update_layout(barmode='group')
+    fig.update_layout(title_text='Descriptive Statistics Tabla 1')
+    return fig.show()
+
+
+# %% Extra Graph 2
+def g_extra_2(param_data):
+    df = param_data
+    fig = px.bar(df, y='Profit', x='Symbol', text='Symbol')
+    fig.update_traces(marker_color='indianred')
+    fig.update_layout(uniformtext_minsize=8, uniformtext_mode='hide')
+    return fig.show()
+
+
+# %% Extra Graph 3
+def g_extra_3(param_data):
+    df = param_data
+    df["Profit"] = np.log(df["Profit"])
+    fig = px.bar(df, y='Profit', x='Symbol', text='Symbol')
+
+    fig.update_layout(uniformtext_minsize=8, uniformtext_mode='hide')
     return fig.show()
