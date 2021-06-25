@@ -82,3 +82,23 @@ def g_extra_3(param_data):
 
     fig.update_layout(uniformtext_minsize=8, uniformtext_mode='hide')
     return fig.show()
+
+
+# %% Extra Graph 4 MAD
+def g_extra_4(param_data):
+    years = ['Sharpe Original Vs Actualizado','DrawnDown vs DrawnUp Capital $ (100s Scaled)']
+    fig = go.Figure()
+    fig.add_trace(go.Bar(x=years, y=[param_data["Value"][0], param_data["Value"][4]/100],
+
+                    marker_color='crimson',
+                    name='Right Side'))
+    fig.add_trace(go.Bar(x=years, y=[param_data["Value"][1], param_data["Value"][7]/100],
+
+                    marker_color='lightblue',
+                    name='Left Side'
+                    ))
+
+    # Change the bar mode
+    fig.update_layout(title_text='MAD Extra Table')
+    fig.update_layout(barmode='group')
+    return fig.show()
