@@ -319,11 +319,12 @@ def f_estadisticas_mad(param_data):
                                             start=param_data.index[0],
                                             end=param_data.index[-1], interval='d')
     price_data_sharp_2 = price_data_sharp_2['Adj Close']
-    ret_price_data_sharp_2 = np.log(price_data_sharp_2 / price_data_sharp_2.shift()).dropna()
+    ret_price_data_sharp_2 = np.log(price_data_sharp_2/ price_data_sharp_2.shift()).dropna()
     r_trader = rp
     r_benchmark = ret_price_data_sharp_2.mean()
     sdp_2 = ret_price_data_sharp_2.std()
     sharp_r_o_2 = (r_trader - r_benchmark) / sdp_2
+
 
     # DrawDown
     k6 = param_data.reset_index()
