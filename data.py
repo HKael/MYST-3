@@ -1,10 +1,10 @@
 """
 # -- --------------------------------------------------------------------------------------------------- -- #
-# -- project: A SHORT DESCRIPTION OF THE PROJECT                                                         -- #
+# -- project: MyST LAB 3                                                                                 -- #
 # -- script: data.py : python script for data collection                                                 -- #
-# -- author: YOUR GITHUB USER NAME                                                                       -- #
+# -- author: HKael                                                                                        -- #
 # -- license: GPL-3.0 License                                                                            -- #
-# -- repository: YOUR REPOSITORY URL                                                                     -- #
+# -- repository: https://github.com/HKael/MyST_LAB_3_EAMM                                                -- #
 # -- --------------------------------------------------------------------------------------------------- -- #
 """
 #%%
