@@ -13,6 +13,7 @@ import pandas as pd
 from data import data_pips0
 import datetime
 import time
+import pandas_datareader as web
 
 
 # %% Descriptive statistics
@@ -314,6 +315,15 @@ def f_estadisticas_mad(param_data):
     sharp_r_o = (rp - risk_free) / sdp
 
     # Sharpe Ratio Ajustado
+    price_data_sharp_2 = web.get_data_yahoo("SPY",
+                                            start=param_data.index[0],
+                                            end=param_data.index[-1], interval='d')
+    price_data_sharp_2 = price_data_sharp_2['Adj Close']
+    ret_price_data_sharp_2 = np.log(price_data_sharp_2 / price_data_sharp_2.shift()).dropna()
+    r_trader = rp
+    r_benchmark = ret_price_data_sharp_2.mean()
+    sdp_2 = ret_price_data_sharp_2.std()
+    sharp_r_o_2 = (r_trader - r_benchmark) / sdp_2
 
     # DrawDown
     k6 = param_data.reset_index()
@@ -365,7 +375,7 @@ def f_estadisticas_mad(param_data):
                            "DrawDown Capital", "DrawUp Capital", "DrawUp Capital", "DrawUp Capital"]
     mad_stats["Measurment"] = ["Amount", "Amount", "Initial Date", "Last Date", "DrawDown Capital $",
                                "Initial Date", "Last Date", "DrawUp Capital $"]
-    mad_stats["Value"] = [sharp_r_o, 5, d_down_initial, d_down_last, d_down, d_up_initial, d_up_last, d_up]
+    mad_stats["Value"] = [sharp_r_o, sharp_r_o_2, d_down_initial, d_down_last, d_down, d_up_initial, d_up_last, d_up]
     mad_stats["Description"] = ["Sharpe Ratio Original Formula", "Sharpe Ratio Adjusted Formula",
                                 "Initial Date of Capital's DrawDown", "Last Date of Capital's DrawDown",
                                 "Maximum floating loss recorded", "Initial Date of Capital's DrawUp",
