@@ -319,12 +319,11 @@ def f_estadisticas_mad(param_data):
                                             start=param_data.index[0],
                                             end=param_data.index[-1], interval='d')
     price_data_sharp_2 = price_data_sharp_2['Adj Close']
-    ret_price_data_sharp_2 = np.log(price_data_sharp_2/ price_data_sharp_2.shift()).dropna()
+    ret_price_data_sharp_2 = np.log(price_data_sharp_2 / price_data_sharp_2.shift()).dropna()
     r_trader = rp
     r_benchmark = ret_price_data_sharp_2.mean()
     sdp_2 = ret_price_data_sharp_2.std()
     sharp_r_o_2 = (r_trader - r_benchmark) / sdp_2
-
 
     # DrawDown
     k6 = param_data.reset_index()
@@ -382,4 +381,124 @@ def f_estadisticas_mad(param_data):
                                 "Maximum floating loss recorded", "Initial Date of Capital's DrawUp",
                                 "Last Date of Capital's DrawUp", "Maximum floating profit recorded"]
     return mad_stats
+
+
 # %% Behavioral Finance
+def f_be_de(param_data):
+    # Profit Ratio
+    param_data["Profit GP"] = param_data["Profit"] / param_data["Profit Accumulated"] * 100
+
+    # Profitable Operations
+    g_op = param_data[param_data["Profit"] > 0].reset_index(drop=True)
+    g_op["Close Time"] = pd.to_datetime(g_op["Close Time"], unit='s')
+    g_op["Open Time"] = pd.to_datetime(g_op["Open Time"], unit='s')
+
+    # Non profitable Operations
+    p_op = param_data[param_data["Profit"] < 0].reset_index(drop=True)
+    p_op["Close Time"] = pd.to_datetime(p_op["Close Time"], unit='s')
+    p_op["Open Time"] = pd.to_datetime(p_op["Open Time"], unit='s')
+    # Punto de referencia
+    result_p = []
+    for x in range(len(p_op)):
+        a = g_op["Close Time"].between(p_op["Open Time"][x], p_op["Close Time"][x])
+        result_p.append(a)
+    res_p_df = pd.DataFrame(np.array(result_p)).transpose()
+
+    # Aversion a la perdida
+    result_g = []
+    for x in range(len(g_op)):
+        wu = abs(p_op["Profit GP"] / g_op["Profit GP"][x])
+        wu = wu > 2
+        result_g.append(wu)
+    #
+    res_g_df = pd.DataFrame(result_g).reset_index(drop=True)
+
+    res_g_df.loc[(res_g_df[2] == True)]
+
+    inters_v = np.intersect1d(np.array(res_p_df.loc[(res_p_df[2] == True)].index),
+                              np.array(res_g_df.loc[(res_g_df[2] == True)].index))
+    inter_g_p_1 = g_op.loc[inters_v[0]]
+    inter_g_p_2 = g_op.loc[inters_v[1]]
+    inter_v_p = p_op.loc[2]
+
+    # Sensibilidad decreciente
+    con_1 = g_op["Profit Accumulated"].loc[0] < g_op["Profit Accumulated"].loc[len(g_op) - 1]
+    con_2 = (g_op["Profit GP"].loc[0] < g_op["Profit GP"].loc[len(g_op) - 1]) & (
+            p_op["Profit GP"].loc[0] < p_op["Profit GP"].loc[len(p_op) - 1])
+    con_3 = abs(p_op["Profit GP"].loc[len(p_op) - 1] / g_op["Profit GP"].loc[len(g_op) - 2])
+
+    if con_1 == True and con_2 == True:
+        sensibilidad_decreciente = "Si"
+    else:
+        if con_1 == True and con_3 > 2:
+            sensibilidad_decreciente = "Si"
+        else:
+            if con_2 == True and con_3 > 2:
+                sensibilidad_decreciente = "Si"
+            else:
+                sensibilidad_decreciente = "No"
+
+            # Operaciones de ocurrencia
+    g_ts_1 = inter_g_p_1["Close Time"]
+    g_ts_1 = g_ts_1.strftime("%m/%d/%Y, %H:%M:%S")
+    g_instrumento_1 = inter_g_p_1["Symbol"]
+    g_volumen_1 = inter_g_p_1["Volume"]
+    g_sentido_1 = inter_g_p_1["Type"]
+    g_profit_1 = inter_g_p_1["Profit"]
+
+    p_instrumento_1 = inter_v_p["Symbol"]
+    p_volumen_1 = inter_v_p["Volume"]
+    p_sentido_1 = inter_v_p["Type"]
+    p_profit_1 = inter_v_p["Profit"]
+
+    # Ratio
+    ratio_cp_profit_acm_1 = abs(inter_v_p["Profit"] / inter_v_p["Profit Accumulated"])  # Momento de sesgo negativo
+    ratio_cg_profit_acm_1 = abs(inter_g_p_1["Profit"] / inter_g_p_1["Profit Accumulated"])  # Ancla
+    ratio_cp_cg_1 = abs(inter_v_p["Profit"] / inter_g_p_1["Profit"])  # Ancla/Momento de sesgo negativo
+
+    # Operaciones de ocurrencia
+    g_ts_2 = inter_g_p_2["Close Time"]
+    g_ts_2 = g_ts_2.strftime("%m/%d/%Y, %H:%M:%S")
+    g_instrumento_2 = inter_g_p_2["Symbol"]
+    g_volumen_2 = inter_g_p_2["Volume"]
+    g_sentido_2 = inter_g_p_2["Type"]
+    g_profit_2 = inter_g_p_2["Profit"]
+
+    p_instrumento_2 = inter_v_p["Symbol"]
+    p_volumen_2 = inter_v_p["Volume"]
+    p_sentido_2 = inter_v_p["Type"]
+    p_profit_2 = inter_v_p["Profit"]
+
+    # Ratio
+    ratio_cp_profit_acm_2 = abs(inter_v_p["Profit"] / inter_v_p["Profit Accumulated"])  # Momento de sesgo negativo
+    ratio_cg_profit_acm_2 = abs(inter_g_p_2["Profit"] / inter_g_p_2["Profit Accumulated"])  # Ancla
+    ratio_cp_cg_2 = abs(inter_v_p["Profit"] / inter_g_p_2["Profit"])  # Ancla/Momento de sesgo negativo
+
+    dic_len = len(inters_v) - 1
+
+    r_df_bf = pd.DataFrame(columns=["Ocurrencias", "Status Quo %", "Aversion Perdida %", "Sensibilidad Decreciente"])
+    r_df_bf["Ocurrencias"] = [dic_len]
+    r_df_bf["Status Quo %"] = [dic_len / len(g_op) * 100]
+    r_df_bf["Aversion Perdida %"] = [dic_len / len(g_op) * 100]
+    r_df_bf["Sensibilidad Decreciente"] = [sensibilidad_decreciente]
+
+    dict_sesgos = {'Ocurrencias':
+                       {'Cantidad': dic_len, "Ocurrencia 1":
+                           {'Timestamp': g_ts_1, "Operaciones":
+                               {"Ganadora": {"Instrumento": g_instrumento_1, "Volumen": g_volumen_1,
+                                             "Sentido": g_sentido_1, "Profit Ganadora": g_profit_1},
+                                "Perdedora": {"Instrumento": p_instrumento_1, "Volumen": p_volumen_1,
+                                              "Sentido": p_sentido_1, "Profit Perdedora": p_profit_1}},
+                            'ratio_cp_profit_acm': ratio_cp_profit_acm_1, 'ratio_cg_profit_acm': ratio_cg_profit_acm_1,
+                            'ratio_cp_cg': ratio_cp_cg_1},
+                        "Ocurrencia 2":
+                            {'Timestamp': g_ts_2, "Operaciones":
+                                {"Ganadora": {"Instrumento": g_instrumento_2, "Volumen": g_volumen_2,
+                                              "Sentido": g_sentido_2, "Profit Ganadora": g_profit_2},
+                                 "Perdedora": {"Instrumento": p_instrumento_2, "Volumen": p_volumen_2,
+                                               "Sentido": p_sentido_2, "Profit Perdedora": p_profit_2}},
+                             'ratio_cp_profit_acm': ratio_cp_profit_acm_2, 'ratio_cg_profit_acm': ratio_cg_profit_acm_2,
+                             'ratio_cp_cg': ratio_cp_cg_2}
+                        }, "Resultados": r_df_bf}
+
+    return dict_sesgos

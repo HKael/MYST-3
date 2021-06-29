@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 from data import data_historical, data_pips, data_pips0
 from functions import f_columnas_pips, f_columnas_tiempos
-from functions import f_estadisticas_ba, f_pip_size, f_evolucion_capital, f_estadisticas_mad
+from functions import f_estadisticas_ba, f_pip_size, f_evolucion_capital, f_estadisticas_mad, f_be_de
 
 import datetime
 import time
@@ -32,6 +32,8 @@ capital_evolution = f_evolucion_capital(historical_data_3)
 #%%
 mad = f_estadisticas_mad(capital_evolution)
 
+#%%
+be_fi = f_be_de(historical_data_3)
 
 
 
