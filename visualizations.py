@@ -102,3 +102,11 @@ def g_extra_4(param_data):
     fig.update_layout(title_text='MAD Extra Table')
     fig.update_layout(barmode='group')
     return fig.show()
+
+
+# %%
+def g_3():
+    eje_x = ['Status Quo', 'Aversión Perdida', "Sensibilidad Decreciente"]
+    fig = go.Figure([go.Bar(x=eje_x, y=[16.6667, 16.6667, 0])])
+    fig.update_layout(title_text='Behavioral Finance Table')
+    return fig.show()
